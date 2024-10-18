@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Achat de Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        .buy-ticket-btn {
+            display: inline-block;
+            background-color: #007bff; /* Couleur bleue */
+            color: white; /* Texte blanc */
+            padding: 15px 30px;
+            font-size: 18px;
+            text-align: center;
+            border: none;
+            border-radius: 50px; /* Bords arrondis */
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+        .buy-ticket-btn:hover {
+            background-color: #0056b3; /* Couleur bleue plus foncée au survol */
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        function openForm() {
+            const formWindow = window.open("", "formWindow", "width=600,height=800");
+            formWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="fr">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Commande de Ticket</title>
+                </head>
+                <body>
+                    <div class="form-container">
+                        <h2>Commande de Ticket</h2>
+                        <form id="ticketForm" onsubmit="event.preventDefault(); generateRecap(this);">
+                            <label for="name">Nom*</label>
+                            <input type="text" id="name" name="name" required>
+
+                            <label for="phone">Téléphone</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+261">
+
+                            <label>Type de Ticket</label>
+                            <input type="radio" id="simple" name="ticket_type" value="Simple" checked>
+                            <label for="simple">Simple (25 000 MGA)</label>
+                            <input type="radio" id="gold" name="ticket_type" value="Gold">
+                            <label for="gold">Gold (40 000 MGA)</label>
+
+                            <label for="ticket_qty">Nombre de Tickets</label>
+                            <input type="number" id="ticket_qty" name="ticket_qty" min="1" value="1" required>
+
+                            <button type="submit" class="submit-btn">Valider la commande</button>
+                        </form>
+                    </div>
+
+                    <div class="recap-container" id="recapContainer" style="display: none;">
+                        <h2>Récapitulatif de la Commande</h2>
+                        <p id="recapName"></p>
+                        <p id="recapPhone"></p>
+                        <p id="recapTicketType"></p>
+                        <p id="recapQty"></p>
+                        <p id="recapTotal"></p>
+                        <p id="recapOrderNum"></p>
+                        <p><strong>Instructions de paiement :</strong></p>
+                        <p>Merci d'effectuer le paiement sur l'un des comptes suivants :</p>
+                        <ul>
+                            <li>+261 33 78 03 232 (Jimmy Harison)</li>
+                            <li>+261 34 92 10 959 (Ella Miharinoro)</li>
+                            <li>+261 32 83 78 799 (Rado Randriamiharisoa)</li>
+                        </ul>
+                        <p>Référence : votre numéro de commande <strong id="orderReference"></strong></p>
+                        <button class="send-btn" onclick="sendForm()">Envoyer et Télécharger</button>
+                    </div>
+
+                    <script>
+                        function generateRecap(form) {
+                            const name = form.name.value;
+                            const phone = form.phone.value;
+                            const ticketType = form.ticket_type.value;
+                            const qty = form.ticket_qty.value;
+                            const price = ticketType === "Simple" ? 25000 : 40000;
+                            const total = price * qty;
+                            const orderNum = 'ARE' + Math.floor(10000 + Math.random() * 90000);
+
+                            document.getElementById('recapName').innerText = 'Nom : ' + name;
+                            document.getElementById('recapPhone').innerText = 'Téléphone : ' + phone;
+                            document.getElementById('recapTicketType').innerText = 'Type de ticket : ' + ticketType;
+                            document.getElementById('recapQty').innerText = 'Nombre de tickets : ' + qty;
+                            document.getElementById('recapTotal').innerText = 'Montant total : ' + total + ' MGA';
+                            document.getElementById('recapOrderNum').innerText = 'Numéro de commande : ' + orderNum;
+                            document.getElementById('orderReference').innerText = orderNum;
+
+                            document.getElementById('recapContainer').style.display = 'block';
+                            document.querySelector('.form-container').style.display = 'none';
+
+                            generatePDF(name, phone, ticketType, qty, total, orderNum);
+                        }
+
+                        function generatePDF(name, phone, ticketType, qty, total, orderNum) {
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF();
+
+                            doc.text(`Récapitulatif de commande`, 10, 10);
+                            doc.text(`Nom : ${name}`, 10, 20);
+                            doc.text(`Téléphone : ${phone}`, 10, 30);
+                            doc.text(`Type de ticket : ${ticketType}`, 10, 40);
+                            doc.text(`Nombre de tickets : ${qty}`, 10, 50);
+                            doc.text(`Montant total : ${total} MGA`, 10, 60);
+                            doc.text(`Numéro de commande : ${orderNum}`, 10, 70);
+                            doc.text(`Instructions de paiement :`, 10, 80);
+                            doc.text(`Payer sur l'un des comptes suivants :`, 10, 90);
+                            doc.text(`+261 33 78 03 232 (Jimmy Harison)`, 10, 100);
+                            doc.text(`+261 34 92 10 959 (Ella Miharinoro)`, 10, 110);
+                            doc.text(`+261 32 83 78 799 (Rado Randriamiharisoa)`, 10, 120);
+                            doc.text(`Référence : ${orderNum}`, 10, 130);
+
+                            doc.save('recapitulatif_commande.pdf');
+                        }
+
+                        function sendForm() {
+                            const formData = new FormData(document.getElementById('ticketForm'));
+                            fetch("https://formspree.io/f/xovqqkry", {
+                                method: "POST",
+                                body: formData,
+                                headers: {
+                                    'Accept': 'application/json'
+                                }
+                            }).then(response => {
+                                if (response.ok) {
+                                    alert("Commande envoyée avec succès !");
+                                } else {
+                                    alert("Erreur lors de l'envoi du formulaire. Veuillez réessayer.");
+                                }
+                            });
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
+        }
+    </script>
+</head>
+<body>
+    <button class="buy-ticket-btn" onclick="openForm()">Achetez votre ticket</button>
+</body>
+</html>
